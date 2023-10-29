@@ -35,13 +35,13 @@ function apply_operations(M::Matrix{Bool})
 end
 
 function generate_binary_matrices(N)
-    all_matrices = []
+    all_matrices = Set{Matrix{Bool}}()
     for i in 0:2^(N^2)-1
         matrix = Matrix{Bool}(undef, N, N)
         mask = 1
         for r in 1:N
             for c in 1:N
-                matrix[r, c] = (i & mask) > 0 ? true : false
+                matrix[r, c] = (i & mask) == 0 ? false : true
                 mask <<= 1
             end
         end
@@ -51,19 +51,18 @@ function generate_binary_matrices(N)
 end
 
 function find_invariant_subgroups(N)
-    unchecked = Set(generate_binary_matrices(N))
-    invariant_subgroups = Set{Matrix{Bool}}[]
+    unchecked = generate_binary_matrices(N)
+    invariant_subgroups = Vector{Vector{Matrix{Bool}}}()
 
     while !isempty(unchecked)
         seed = pop!(unchecked)
-        subgroup = Set{Matrix{Bool}}([seed])
-        queue = [seed]
+        subgroup = Vector{Matrix{Bool}}([seed])
+        queue = Vector{Matrix{Bool}}([seed])
         
         while !isempty(queue)
             current_matrix = popfirst!(queue)
-            operations_results = apply_operations(current_matrix)
             
-            for res in operations_results
+            for res in apply_operations(current_matrix)
                 if res in unchecked
                     push!(subgroup, res)
                     push!(queue, res)
@@ -78,4 +77,4 @@ function find_invariant_subgroups(N)
     return invariant_subgroups
 end
 
-find_invariant_subgroups(4)
+@time find_invariant_subgroups(5)
