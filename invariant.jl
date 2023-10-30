@@ -1,39 +1,3 @@
-function apply_operations(M::Matrix{Bool})
-    n, m = size(M)
-    
-    results = Vector{Matrix{Bool}}()
-    
-    for i in 1:n
-        for j in i+1:n
-            new_M = copy(M)
-            new_M[i, :], new_M[j, :] = M[j, :], M[i, :]
-            push!(results, new_M)
-        end
-    end
-    
-    for i in 1:m
-        for j in i+1:m
-            new_M = copy(M)
-            new_M[:, i], new_M[:, j] = M[:, j], M[:, i]
-            push!(results, new_M)
-        end
-    end
-    
-    for i in 1:n
-        new_M = copy(M)
-        new_M[i, :] = .!M[i, :]
-        push!(results, new_M)
-    end
-    
-    for i in 1:m
-        new_M = copy(M)
-        new_M[:, i] = .!M[:, i]
-        push!(results, new_M)
-    end
-    
-    return results
-end
-
 function matrix_to_binary(M::Matrix{Bool})
     place = 1
 	result = 0
@@ -66,19 +30,55 @@ function find_invariant_subgroups(N)
     unchecked = generate_binary_matrices(N)
     invariant_subgroups = Vector{Vector{Matrix{Bool}}}()
 
+    function process_matrix(current_matrix, unchecked, subgroup, queue, action)
+        action(current_matrix)
+        if current_matrix in unchecked
+            copy_matrix = copy(current_matrix)
+            push!(subgroup, copy_matrix)
+            push!(queue, copy_matrix)
+            delete!(unchecked, copy_matrix)
+        end
+        action(current_matrix)
+    end
+
+    function toggle_row!(matrix, i)
+        @inbounds for k in 1:N
+            matrix[i, k] = !matrix[i, k]
+        end
+    end
+
+    function toggle_column!(matrix, i)
+        @inbounds for k in 1:N
+            matrix[k, i] = !matrix[k, i]
+        end
+    end
+
+    function swap_rows!(matrix, i, j)
+        @inbounds for k in 1:N
+            matrix[i, k], matrix[j, k] = matrix[j, k], matrix[i, k]
+        end
+    end
+
+    function swap_columns!(matrix, i, j)
+        @inbounds for k in 1:N
+            matrix[k, i], matrix[k, j] = matrix[k, j], matrix[k, i]
+        end
+    end
+
     while !isempty(unchecked)
         seed = pop!(unchecked)
-        subgroup = Vector{Matrix{Bool}}([seed])
-        queue = Vector{Matrix{Bool}}([seed])
-        
+        subgroup, queue = [seed], [seed]
+
         while !isempty(queue)
-            current_matrix = popfirst!(queue)
-            
-            for res in apply_operations(current_matrix)
-                if res in unchecked
-                    push!(subgroup, res)
-                    push!(queue, res)
-                    delete!(unchecked, res)
+            current_matrix = pop!(queue)
+
+            for i in 1:N
+                process_matrix(current_matrix, unchecked, subgroup, queue, matrix -> toggle_row!(matrix, i))
+                process_matrix(current_matrix, unchecked, subgroup, queue, matrix -> toggle_column!(matrix, i))
+
+                for j in i+1:N
+                    process_matrix(current_matrix, unchecked, subgroup, queue, matrix -> swap_rows!(matrix, i, j))
+                    process_matrix(current_matrix, unchecked, subgroup, queue, matrix -> swap_columns!(matrix, i, j))
                 end
             end
         end
