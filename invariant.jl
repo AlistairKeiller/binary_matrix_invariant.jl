@@ -34,18 +34,30 @@ function apply_operations(M::Matrix{Bool})
     return results
 end
 
+function matrix_to_binary(M::Matrix{Bool})
+    place = 1
+	result = 0
+	for v in M
+		result += v * place
+		place <<= 1
+	end
+	return result
+end
+
+function binary_to_matrix(b, N)
+	matrix = Matrix{Bool}(undef, N, N)
+	mask = 1
+	for v in eachindex(matrix)
+		matrix[v] = (b & mask) == 0 ? false : true
+		mask <<= 1
+	end
+	return matrix
+end
+
 function generate_binary_matrices(N)
     all_matrices = Set{Matrix{Bool}}()
     for i in 0:2^(N^2)-1
-        matrix = Matrix{Bool}(undef, N, N)
-        mask = 1
-        for r in 1:N
-            for c in 1:N
-                matrix[r, c] = (i & mask) == 0 ? false : true
-                mask <<= 1
-            end
-        end
-        push!(all_matrices, matrix)
+        push!(all_matrices, binary_to_matrix(i, N))
     end
     return all_matrices
 end
@@ -77,4 +89,13 @@ function find_invariant_subgroups(N)
     return invariant_subgroups
 end
 
-@time find_invariant_subgroups(5)
+function print_subgroups(N)
+    for (i, subgroup) in enumerate(find_invariant_subgroups(N))
+		println("Subgroup:           $i")
+		println("Number of matrices: $(length(subgroup))")
+		display(binary_to_matrix(minimum(matrix_to_binary, subgroup), N))
+        println()
+    end
+end
+
+print_subgroups(4)
