@@ -1,29 +1,21 @@
 function matrix_to_binary(M::Matrix{Bool})
-    place = 1
-	result = 0
-	for v in M
-		result += v * place
-		place <<= 1
+	sum = 0
+	for (i, bit) in enumerate(M)
+		sum += bit << i
 	end
-	return result
+	return sum
 end
 
 function binary_to_matrix(b, N)
 	matrix = Matrix{Bool}(undef, N, N)
-	mask = 1
-	for v in eachindex(matrix)
-		matrix[v] = (b & mask) == 0 ? false : true
-		mask <<= 1
+	@inbounds for i in eachindex(matrix)
+		matrix[i] = (b & 1 << (i-1)) == 0
 	end
 	return matrix
 end
 
 function generate_binary_matrices(N)
-    all_matrices = Set{Matrix{Bool}}()
-    for i in 0:2^(N^2)-1
-        push!(all_matrices, binary_to_matrix(i, N))
-    end
-    return all_matrices
+	return Set(binary_to_matrix(i, N) for i in 0:2^(N^2)-1)
 end
 
 function find_invariant_subgroups(N)
