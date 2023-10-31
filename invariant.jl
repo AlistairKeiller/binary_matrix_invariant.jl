@@ -1,7 +1,7 @@
 function matrix_to_binary(M::Matrix{Bool})
     sum = 0
     for (i, bit) in enumerate(M)
-        sum += bit << i
+        sum += bit << (i-1)
     end
     return sum
 end
@@ -9,7 +9,7 @@ end
 function binary_to_matrix(b, N)
     matrix = Matrix{Bool}(undef, N, N)
     @inbounds for i in eachindex(matrix)
-        matrix[i] = (b & 1 << (i - 1)) == 0
+        matrix[i] = (b & 1 << (i - 1)) > 0
     end
     return matrix
 end
@@ -81,12 +81,24 @@ function find_invariant_subgroups(N)
     return invariant_subgroups
 end
 
-function print_subgroups(N)
-    for (i, subgroup) in enumerate(find_invariant_subgroups(N))
-        println("Subgroup:           $i")
-        println("Number of matrices: $(length(subgroup))")
-        display(binary_to_matrix(minimum(matrix_to_binary, subgroup), N))
+function pretty_print_matrix(M)
+    for i in 1:size(M, 1)
+        for j in 1:size(M, 2)
+            print(Int(M[i, j]), " ")
+        end
         println()
+		print("                    ")
+    end
+end
+
+function print_subgroups(N)
+    subgroups = find_invariant_subgroups(N)
+    for (i, subgroup) in enumerate(subgroups)
+        println("Subgroup:           ", i)
+        println("Number of matrices: ", length(subgroup))
+        print("Minimum matrix:     ")
+        pretty_print_matrix(binary_to_matrix(minimum(matrix_to_binary, subgroup), N))
+        println("\n" ^ 2)
     end
 end
 
