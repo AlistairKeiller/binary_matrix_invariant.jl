@@ -4,11 +4,7 @@ function swap_columns(M, c1, c2, N)
 end
 
 function swap_rows(M, r1, r2, N)
-    mask = 1
-    for i in 1:(N-1)
-        mask |= (1 << (N * i))
-    end
-    xor_mask = ((M >> (r1 - 1)) ⊻ (M >> (r2 - 1))) & mask
+    xor_mask = ((M >> (r1 - 1)) ⊻ (M >> (r2 - 1))) & ((1 << (N * N) - 1) ÷ ((1 << N) - 1))
     return M ⊻ ((xor_mask << (r1 - 1)) | (xor_mask << (r2 - 1)))
 end
 
@@ -17,10 +13,7 @@ function invert_column(M, c, N)
 end
 
 function invert_row(M, r, N)
-    for c in 1:N
-        M ⊻= (1 << ((r - 1) + (c - 1) * N))
-    end
-    return M
+    return M ⊻ (((1 << (N * N) - 1) ÷ ((1 << N) - 1)) << (r - 1))
 end
 
 function look_for_new_M(new_M, queue, subgroups, subgroup_counter)
