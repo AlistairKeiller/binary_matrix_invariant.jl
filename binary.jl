@@ -1,43 +1,24 @@
-function get_shift(r, c, N)
-    return r - 1 + (c - 1) * N
-end
-
 function swap_columns(M, c1, c2, N)
-    for r in 1:N
-        bit1 = (M & (1 << get_shift(r, c1, N))) > 0
-        bit2 = (M & (1 << get_shift(r, c2, N))) > 0
-
-        xor_bit = bit1 ⊻ bit2
-
-        M ⊻= xor_bit << get_shift(r, c1, N)
-        M ⊻= xor_bit << get_shift(r, c2, N)
-    end
-    return M
+    xor_mask = ((M >> ((c1 - 1) * N)) ⊻ (M >> ((c2 - 1) * N))) & ((1 << N) - 1)
+    return M ⊻ ((xor_mask << ((c1 - 1) * N)) | (xor_mask << ((c2 - 1) * N)))
 end
 
 function swap_rows(M, r1, r2, N)
-    for c in 1:N
-        bit1 = (M & (1 << get_shift(r1, c, N))) > 0
-        bit2 = (M & (1 << get_shift(r2, c, N))) > 0
-
-        xor_bit = bit1 ⊻ bit2
-
-        M ⊻= xor_bit << get_shift(r1, c, N)
-        M ⊻= xor_bit << get_shift(r2, c, N)
+    mask = 1
+    for i in 1:(N-1)
+        mask |= (1 << (N * i))
     end
-    return M
+    xor_mask = ((M >> (r1 - 1)) ⊻ (M >> (r2 - 1))) & mask
+    return M ⊻ ((xor_mask << (r1 - 1)) | (xor_mask << (r2 - 1)))
 end
 
 function invert_column(M, c, N)
-    for r in 1:N
-        M ⊻= (1 << get_shift(r, c, N))
-    end
-    return M
+    return M ⊻ (((1 << N) - 1) << ((c - 1) * N))
 end
 
 function invert_row(M, r, N)
     for c in 1:N
-        M ⊻= (1 << get_shift(r, c, N))
+        M ⊻= (1 << ((r - 1) + (c - 1) * N))
     end
     return M
 end
@@ -78,6 +59,7 @@ end
 
 function print_subgroups(N)
     subgroups, number_of_subgroups = find_invariant_subgroups(N)
+
     for subgroup in 1:number_of_subgroups
         in_subgroup = subgroups .== subgroup
         println("Subgroup:              ", subgroup)
@@ -86,7 +68,7 @@ function print_subgroups(N)
         representitive = findfirst(in_subgroup) - 1
         for r in 1:N
             for c in 1:N
-                print(Int((representitive & (1 << get_shift(r, c, N))) > 0), " ")
+                print(Int((representitive & (1 << ((r - 1) + (c - 1) * N))) > 0), " ")
             end
             println()
             print("                       ")
@@ -96,4 +78,4 @@ function print_subgroups(N)
     end
 end
 
-print_subgroups(4)
+print_subgroups(5)
