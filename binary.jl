@@ -26,12 +26,12 @@ end
 function find_invariant_subgroups(N)
     subgroups = [0 for i in 1:2^(N^2)]
     subgroup_counter = 0
+    i = 1
 
-    while any(subgroups .== 0)
+    while subgroups[i] == 0
         subgroup_counter += 1
-        seed = findfirst(subgroups .== 0) - 1
-        subgroups[seed+1] = subgroup_counter
-        queue = [seed]
+        subgroups[i] = subgroup_counter
+        queue = [i - 1]
 
         while !isempty(queue)
             M = pop!(queue)
@@ -45,6 +45,10 @@ function find_invariant_subgroups(N)
                     look_for_new_M(swap_rows(M, i, j, N), queue, subgroups, subgroup_counter)
                 end
             end
+        end
+
+        while (subgroups[i] != 0) && i < length(subgroups)
+            i += 1
         end
     end
     return subgroups, subgroup_counter
