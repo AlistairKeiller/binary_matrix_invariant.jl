@@ -54,15 +54,27 @@ function find_invariant_subgroups(N)
     return subgroups, subgroup_counter
 end
 
+mutable struct Subgroup_Info
+    count::Int64
+    representative::Int64
+end
+
 function print_subgroups(N)
     subgroups, number_of_subgroups = find_invariant_subgroups(N)
+    subgroup_info = [Subgroup_Info(0, -1) for i in 1:number_of_subgroups]
+
+    for (i, m) in enumerate(subgroups)
+        subgroup_info[m].count += 1
+        if subgroup_info[m].representative == -1
+            subgroup_info[m].representative = i - 1
+        end
+    end
 
     for subgroup in 1:number_of_subgroups
-        in_subgroup = subgroups .== subgroup
         println("Subgroup:              ", subgroup)
-        println("Subgroup member count: ", sum(in_subgroup))
+        println("Subgroup member count: ", subgroup_info[subgroup].count)
         print("Representative matrix: ")
-        representitive = findfirst(in_subgroup) - 1
+        representitive = subgroup_info[subgroup].representative
         for r in 1:N
             for c in 1:N
                 print(Int((representitive & (1 << ((r - 1) + (c - 1) * N))) > 0), " ")
