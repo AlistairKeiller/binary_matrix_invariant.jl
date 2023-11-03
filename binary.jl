@@ -36,13 +36,13 @@ function find_invariant_subgroups(N)
         while !isempty(queue)
             M = pop!(queue)
 
-            for i in 1:N
-                look_for_new_M(invert_column(M, i, N), queue, subgroups, subgroup_counter)
-                look_for_new_M(invert_row(M, i, N), queue, subgroups, subgroup_counter)
+            for j in 1:N
+                look_for_new_M(invert_column(M, j, N), queue, subgroups, subgroup_counter)
+                look_for_new_M(invert_row(M, j, N), queue, subgroups, subgroup_counter)
 
-                for j in i+1:N
-                    look_for_new_M(swap_columns(M, i, j, N), queue, subgroups, subgroup_counter)
-                    look_for_new_M(swap_rows(M, i, j, N), queue, subgroups, subgroup_counter)
+                for k in j+1:N
+                    look_for_new_M(swap_columns(M, j, k, N), queue, subgroups, subgroup_counter)
+                    look_for_new_M(swap_rows(M, j, k, N), queue, subgroups, subgroup_counter)
                 end
             end
         end
